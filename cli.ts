@@ -14,6 +14,10 @@ import { verifyTarget } from "./src/verifier/ui-gate.ts";
 import { searchSymbols } from "./src/symbols/catalog.ts";
 import { generateStitchScreen } from "./src/stitch/stitch-engine.ts";
 import { generateBunDesignDocs } from "./src/mdx/bun-docs-generator.ts";
+import {
+  buildMaterialIconsFigmaManifest,
+  fetchFigmaCurrentUser,
+} from "./src/figma/figma-connect.ts";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -163,6 +167,31 @@ async function main() {
         console.log(`  + ${f}`);
       }
       console.log(`docs.json updated: ${res.docsJsonUpdated}`);
+      break;
+    }
+
+    case "figma": {
+      const me = await fetchFigmaCurrentUser();
+      const manifest = buildMaterialIconsFigmaManifest();
+      mkdirSync(join(import.meta.dir, "dist"), { recursive: true });
+      const outPath = join(
+        import.meta.dir,
+        "dist",
+        "figma-material-icons.manifest.json",
+      );
+      writeFileSync(
+        outPath,
+        JSON.stringify(
+          { user: { id: me.id, handle: me.handle }, icons: manifest },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+      console.log(`Figma API Authenticated: @${me.handle} (id=${me.id})`);
+      console.log(
+        `Synced ${manifest.length} Material Design Icons from C:\\src\\google-design\\upstream\\material-design-icons -> ${outPath}`,
+      );
       break;
     }
 

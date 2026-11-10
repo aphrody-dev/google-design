@@ -371,9 +371,9 @@ The gate checks:
     }
   }
 
-  // Format generated MDX files with Bun
+  // Format generated MDX files and docs.json with Bun
   try {
-    const proc = Bun.spawn(["bun", "fmt", BUN_DOCS_DESIGN_DIR], {
+    const proc = Bun.spawn(["bun", "fmt", BUN_DOCS_DESIGN_DIR, BUN_DOCS_JSON], {
       stdout: "ignore",
       stderr: "ignore",
     });

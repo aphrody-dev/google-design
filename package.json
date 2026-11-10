@@ -1,0 +1,22 @@
+{
+  "name": "google-design",
+  "version": "1.0.0",
+  "description": "Google Design & Material 3 Sovereign Mirror, Multi-Surface Token Compiler & Universal Verification Engine",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "gds": "./cli.ts"
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "dev": "bun run server.ts",
+    "start": "bun run server.ts",
+    "test": "bun test tests",
+    "check": "bun check",
+    "fmt": "bun fmt",
+    "mdx": "bun run cli.ts mdx",
+    "verify": "bun run cli.ts verify"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -10,11 +10,19 @@
 import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
 import { calculateContrast, getHctColorInfo } from "../color-utils/hct.ts";
+import { auditAntiSlop } from "../humanizer/anti-slop.ts";
 
 export interface VerificationIssue {
   severity: "error" | "warning" | "info";
   category:
-    "token" | "color" | "typography" | "grid" | "symbol" | "figma" | "contrast";
+    | "token"
+    | "color"
+    | "typography"
+    | "grid"
+    | "symbol"
+    | "figma"
+    | "contrast"
+    | "anti-slop";
   file: string;
   line: number;
   message: string;
@@ -32,6 +40,7 @@ export interface VerificationReport {
     gridAdherenceRate: number;
     svgCrispnessRate: number;
     contrastComplianceRate: number;
+    antiSlopComplianceRate: number;
   };
   timestamp: string;
 }
@@ -80,6 +89,8 @@ export function verifyTarget(targetPath: string): VerificationReport {
   let svgChecksPassed = 0;
   let contrastChecksTotal = 0;
   let contrastChecksPassed = 0;
+  let antiSlopChecksTotal = 0;
+  let antiSlopChecksPassed = 0;
 
   for (const filePath of files) {
     const ext = extname(filePath).toLowerCase();
@@ -93,6 +104,7 @@ export function verifyTarget(targetPath: string): VerificationReport {
         ".jsx",
         ".rs",
         ".json",
+        ".md",
         ".mdx",
       ].includes(ext)
     ) {
@@ -107,6 +119,8 @@ export function verifyTarget(targetPath: string): VerificationReport {
       filePath.includes("/upstream/") ||
       filePath.includes("\\dist\\") ||
       filePath.includes("/dist/") ||
+      filePath.includes("\\var\\") ||
+      filePath.includes("/var/") ||
       filePath.includes("\\node_modules\\") ||
       filePath.includes("/node_modules/")
     ) {
@@ -114,33 +128,80 @@ export function verifyTarget(targetPath: string): VerificationReport {
     }
 
     const content = readFileSync(filePath, "utf8");
+
+    // Run anti-slop auditor on UI/prose files (excluding anti-slop rule definitions & anti-slop tests)
+    const isSlopRuleFile =
+      filePath.endsWith("anti-slop.ts") ||
+      filePath.endsWith("anti-slop.test.ts") ||
+      filePath.includes("\\tests\\") ||
+      filePath.includes("/tests/");
+    if (
+      !isSlopRuleFile &&
+      [".html", ".css", ".tsx", ".jsx", ".md", ".mdx"].includes(ext)
+    ) {
+      antiSlopChecksTotal++;
+      const slopResult = auditAntiSlop(content, {
+        filePath,
+        checkUiStyles: [".html", ".css", ".tsx", ".jsx"].includes(ext),
+        checkSpacing: false, // handled by grid check below
+        includeSuggestion: false,
+      });
+      if (slopResult.clean) {
+        antiSlopChecksPassed++;
+      } else {
+        for (const f of slopResult.findings) {
+          issues.push({
+            severity: f.severity,
+            category: "anti-slop",
+            file: filePath,
+            line: f.line,
+            message: `[${f.ruleId}] ${f.message} ('${f.excerpt}')`,
+            remediation: f.replacement
+              ? `Replace with '${f.replacement}' or run gds humanize`
+              : "Rewrite in direct, concrete prose without AI clichés or slop gradients.",
+          });
+        }
+      }
+    }
+
     const lines = content.split("\n");
 
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       const line = lines[lineIdx];
       const lineNum = lineIdx + 1;
 
-      // 1. Color Check: Scan for rogue hex colors outside M3 or Google Brand
-      const hexMatches = line.matchAll(
-        /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g,
-      );
-      for (const match of hexMatches) {
-        tokenChecksTotal++;
-        const hex = match[0].toLowerCase();
-        const normHex =
-          hex.length === 4
-            ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
-            : hex.slice(0, 7);
+        // 1. Color Check: Scan for rogue hex colors outside M3, Google Brand, or canonical theme/asset definitions
+        const isPaletteDataFile =
+          filePath.endsWith("themes-stylesheets.ts") ||
+          filePath.endsWith("wallpapers.ts") ||
+          filePath.endsWith("open-pets.ts") ||
+          filePath.endsWith("brand-legal.ts") ||
+          filePath.endsWith("models-3d.ts") ||
+          filePath.endsWith("prd-design-md.ts") ||
+          filePath.endsWith("anti-slop.ts") ||
+          filePath.includes("\\tests\\") ||
+          filePath.includes("/tests/");
 
-        const isGoogleBrand = GOOGLE_BRAND_COLORS.has(normHex);
-        const isM3Var =
-          line.includes("--md-sys-") ||
-          line.includes("--md-ref-") ||
-          line.includes("var(");
+        const hexMatches = line.matchAll(
+          /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g,
+        );
+        for (const match of hexMatches) {
+          tokenChecksTotal++;
+          const hex = match[0].toLowerCase();
+          const normHex =
+            hex.length === 4
+              ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+              : hex.slice(0, 7);
 
-        if (isGoogleBrand || isM3Var) {
-          tokenChecksPassed++;
-        } else {
+          const isGoogleBrand = GOOGLE_BRAND_COLORS.has(normHex);
+          const isM3Var =
+            line.includes("--md-sys-") ||
+            line.includes("--md-ref-") ||
+            line.includes("var(");
+
+          if (isGoogleBrand || isM3Var || isPaletteDataFile) {
+            tokenChecksPassed++;
+          } else {
           // Check HCT color info
           try {
             const info = getHctColorInfo(normHex);
@@ -224,13 +285,18 @@ export function verifyTarget(targetPath: string): VerificationReport {
     contrastChecksTotal === 0
       ? 1.0
       : contrastChecksPassed / contrastChecksTotal;
+  const antiSlopComplianceRate =
+    antiSlopChecksTotal === 0
+      ? 1.0
+      : antiSlopChecksPassed / antiSlopChecksTotal;
 
   // Calculate composite score (0..100)
   const weighted =
-    tokenComplianceRate * 35 +
-    gridAdherenceRate * 25 +
-    svgCrispnessRate * 20 +
-    contrastComplianceRate * 20;
+    tokenComplianceRate * 30 +
+    gridAdherenceRate * 20 +
+    svgCrispnessRate * 15 +
+    contrastComplianceRate * 15 +
+    antiSlopComplianceRate * 20;
 
   const score = Math.max(0, Math.min(100, Math.round(weighted)));
   const errorsCount = issues.filter((i) => i.severity === "error").length;
@@ -247,6 +313,7 @@ export function verifyTarget(targetPath: string): VerificationReport {
       gridAdherenceRate: Number(gridAdherenceRate.toFixed(3)),
       svgCrispnessRate: Number(svgCrispnessRate.toFixed(3)),
       contrastComplianceRate: Number(contrastComplianceRate.toFixed(3)),
+      antiSlopComplianceRate: Number(antiSlopComplianceRate.toFixed(3)),
     },
     timestamp: new Date().toISOString(),
   };

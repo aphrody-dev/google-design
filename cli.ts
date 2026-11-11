@@ -1,14 +1,12 @@
 #!/usr/bin/env bun
 /**
- * 3-Letter CLI: gds (Google Design System)
- * 100% Pure Bun v1.4.4 - Zero External Dependencies
+ * Google Design System & Anti-AI-Slop Studio CLI (gds)
+ * 100% Pure Bun v1.4.4 Full-Rust Architecture - Zero External Dependencies
  */
 
-import { parseArgs } from "node:util";
-import {
-  getHctColorInfo,
-  generateDynamicTheme,
-} from "./src/color-utils/hct.ts";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { getHctColorInfo } from "./src/color-utils/hct.ts";
 import { compileUniversalTokens } from "./src/theme-builder/exporter.ts";
 import { verifyTarget } from "./src/verifier/ui-gate.ts";
 import { searchSymbols } from "./src/symbols/catalog.ts";
@@ -18,18 +16,33 @@ import {
   buildMaterialIconsFigmaManifest,
   fetchFigmaCurrentUser,
 } from "./src/figma/figma-connect.ts";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import {
+  auditPathAntiSlop,
+  humanizeText,
+} from "./src/humanizer/anti-slop.ts";
+import {
+  synthesizePrdAndDesignMd,
+  type SurfaceMode,
+} from "./src/spec/prd-design-md.ts";
+import { generateAssetBank } from "./src/assets/index.ts";
 
 const args = process.argv.slice(2);
 const command = args[0] || "help";
 
+function getFlagValue(flag: string): string | null {
+  const idx = args.indexOf(flag);
+  if (idx !== -1 && args[idx + 1] && !args[idx + 1].startsWith("--")) {
+    return args[idx + 1];
+  }
+  return null;
+}
+
 async function main() {
   switch (command) {
     case "serve": {
-      const portIdx = args.indexOf("--port");
-      if (portIdx !== -1 && args[portIdx + 1]) {
-        process.env.PORT = args[portIdx + 1];
+      const port = getFlagValue("--port");
+      if (port) {
+        process.env.PORT = port;
       }
       await import("./server.ts");
       break;
@@ -46,16 +59,19 @@ async function main() {
       console.log(`Status:         ${report.passed ? "PASS" : "FAIL"}`);
       console.log("Metrics:");
       console.log(
-        `  Token Compliance:  ${(report.metrics.tokenComplianceRate * 100).toFixed(1)}%`,
+        `  Token Compliance:   ${(report.metrics.tokenComplianceRate * 100).toFixed(1)}%`,
       );
       console.log(
-        `  Grid Adherence:    ${(report.metrics.gridAdherenceRate * 100).toFixed(1)}%`,
+        `  Grid Adherence:     ${(report.metrics.gridAdherenceRate * 100).toFixed(1)}%`,
       );
       console.log(
-        `  SVG Crispness:     ${(report.metrics.svgCrispnessRate * 100).toFixed(1)}%`,
+        `  SVG Crispness:      ${(report.metrics.svgCrispnessRate * 100).toFixed(1)}%`,
       );
       console.log(
-        `  Contrast Accuracy: ${(report.metrics.contrastComplianceRate * 100).toFixed(1)}%`,
+        `  Contrast Accuracy:  ${(report.metrics.contrastComplianceRate * 100).toFixed(1)}%`,
+      );
+      console.log(
+        `  Anti-Slop Clean:    ${(report.metrics.antiSlopComplianceRate * 100).toFixed(1)}%`,
       );
       console.log("--------------------------------------------------");
 
@@ -79,13 +95,101 @@ async function main() {
       break;
     }
 
+    case "audit-slop": {
+      const target = args[1] || process.cwd();
+      const jsonOut = args.includes("--json");
+      const report = auditPathAntiSlop(target);
+
+      if (jsonOut) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        console.log(`Anti-AI-Slop Audit (impeccable + humanizer)`);
+        console.log("--------------------------------------------------");
+        console.log(`Target:         ${report.targetPath}`);
+        console.log(`Files Scanned:  ${report.scannedFiles}`);
+        console.log(`Average Score:  ${report.averageScore}/100`);
+        console.log(`Total Findings: ${report.totalFindings}`);
+        console.log(`Status:         ${report.clean ? "CLEAN" : "FINDINGS"}`);
+        console.log("--------------------------------------------------");
+
+        for (const fileReport of report.files) {
+          for (const f of fileReport.findings.slice(0, 15)) {
+            console.log(
+              `  [${f.severity.toUpperCase()}] ${fileReport.file}:${f.line}:${f.column} (${f.ruleId}) - ${f.message}`,
+            );
+          }
+        }
+      }
+
+      if (!report.clean) {
+        process.exit(1);
+      }
+      break;
+    }
+
+    case "humanize": {
+      const targetFile = args[1];
+      if (!targetFile || !existsSync(targetFile)) {
+        console.error("Usage: gds humanize <file> [--write]");
+        process.exit(1);
+      }
+      const raw = readFileSync(targetFile, "utf8");
+      const rewritten = humanizeText(raw);
+      if (args.includes("--write") || args.includes("-w")) {
+        writeFileSync(targetFile, rewritten, "utf8");
+        console.log(`Humanized prose written in-place to: ${targetFile}`);
+      } else {
+        process.stdout.write(rewritten);
+      }
+      break;
+    }
+
+    case "plan": {
+      const surfaceName =
+        args[1] && !args[1].startsWith("--")
+          ? args[1]
+          : "Aphrody Generalist Surface";
+      const outDir = resolve(getFlagValue("--out") || join(process.cwd(), "spec"));
+      const seedColor = getFlagValue("--seed") || "#1A73E8";
+      const mode = (getFlagValue("--mode") as SurfaceMode) || "operate";
+
+      const bundle = synthesizePrdAndDesignMd({
+        name: surfaceName,
+        seedColor,
+        mode,
+        outDir,
+      });
+
+      console.log(`Generated Design-First Plan for '${bundle.name}' (${bundle.mode})`);
+      for (const f of bundle.writtenFiles) {
+        console.log(`  + ${f}`);
+      }
+      break;
+    }
+
+    case "assets": {
+      const outDir = resolve(
+        getFlagValue("--out") || join(process.cwd(), "dist", "assets"),
+      );
+      console.log(`Generating Sovereign Open Creative Asset Bank -> ${outDir}`);
+      const res = generateAssetBank(outDir);
+      console.log("--------------------------------------------------");
+      console.log(`Manifest:       ${res.manifestPath}`);
+      console.log(`Total Files:    ${res.totalFiles}`);
+      console.log(`Total Size:     ${(res.totalBytes / 1024).toFixed(1)} KB`);
+      console.log(`Themes:         ${res.counts.themes} (23 Omarchy + CachyOS + M3 + Fluent 2)`);
+      console.log(`SVG Icons:      ${res.counts.icons} (+ symbol sprite & atlas)`);
+      console.log(`Open Pets:      ${res.counts.openPets} (GIF89a + SVG/PNG sheets + CSS/JSON)`);
+      console.log(`Wallpapers:     ${res.counts.wallpapers} (4K SVG + compressed PNG)`);
+      console.log(`3D Models:      ${res.counts.models3d} (.glb + .gltf + .obj)`);
+      console.log(`Audio Clips:    ${res.counts.audioClips} (16-bit 44.1kHz PCM .wav + motion scenes)`);
+      console.log("--------------------------------------------------");
+      break;
+    }
+
     case "tokens": {
-      const seedIdx = args.indexOf("--seed");
-      const seed =
-        seedIdx !== -1 && args[seedIdx + 1] ? args[seedIdx + 1] : "#4285F4";
-      const outIdx = args.indexOf("--out");
-      const outDir =
-        outIdx !== -1 && args[outIdx + 1] ? args[outIdx + 1] : null;
+      const seed = getFlagValue("--seed") || "#4285F4";
+      const outDir = getFlagValue("--out");
 
       const bundle = compileUniversalTokens(seed);
       console.log(`Compiled Universal Tokens for seed: ${seed}`);
@@ -130,7 +234,7 @@ async function main() {
       if (!hex.startsWith("#")) hex = "#" + hex;
       const info = getHctColorInfo(hex);
       console.log(`HCT Color Analysis for ${hex}:`);
-      console.log(`  Hue:    ${info.hue}°`);
+      console.log(`  Hue:    ${info.hue} deg`);
       console.log(`  Chroma: ${info.chroma}`);
       console.log(`  Tone:   ${info.tone}`);
       console.log(`  RGB:    (${info.rgb.r}, ${info.rgb.g}, ${info.rgb.b})`);
@@ -190,29 +294,35 @@ async function main() {
       );
       console.log(`Figma API Authenticated: @${me.handle} (id=${me.id})`);
       console.log(
-        `Synced ${manifest.length} Material Design Icons from C:\\src\\google-design\\upstream\\material-design-icons -> ${outPath}`,
+        `Synced ${manifest.length} Material Design Icons -> ${outPath}`,
       );
       break;
     }
 
+    case "--help":
+    case "-h":
     case "help":
     default: {
       console.log(`
-Google Design System CLI (gds)
-Pure Bun v1.4.4 Full Rust Architecture - Zero External Dependencies
+Google Design System & Anti-AI-Slop Studio CLI (gds v2.0.0)
+Pure Bun v1.4.4 Full-Rust Architecture - Zero External Dependencies
 
 Usage:
   gds <command> [options]
 
 Commands:
-  serve [--port 3030]       Start the Google Design & Material 3 local mirror server
-  verify [path]             Run UI Gate verifier on design system compliance
-  tokens [--seed <hex>]     Compile universal tokens across all 7 surfaces
-  hct <hex>                 Analyze color in CAM16 / HCT perceptual space
-  symbols [query]           Search crisp Material Symbols vector catalog
-  stitch <prompt>           Generate Material 3 UI screen from prompt
-  mdx                       Generate & format full MDX documentation suite in bun docs
-  help                      Show this help message
+  plan <name> [--out <dir>]     Synthesize PRD.md (Cahier des charges) + DESIGN.md maquette
+  assets [--out <dir>]          Generate complete Open Creative Asset Bank + SHA-256 manifest
+  audit-slop [path] [--json]    Audit prose & UI styles for AI clichés, emojis & SaaS slop
+  humanize <file> [--write]     Deterministically rewrite AI tropes into direct human prose
+  verify [path]                 Run UI Gate verifier (tokens, 4dp/8dp grid, SVG, anti-slop)
+  tokens [--seed <hex>]         Compile universal tokens across all 7 surfaces
+  hct <hex>                     Analyze color in CAM16 / HCT perceptual space
+  symbols [query]               Search crisp Material Symbols vector catalog
+  stitch <prompt>               Generate Material 3 UI screen wireframe from prompt
+  mdx                           Generate & format full MDX documentation suite in bun docs
+  serve [--port 3030]           Start the Google Design & Material 3 local mirror server
+  help                          Show this help message
 `);
       break;
     }

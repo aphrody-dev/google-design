@@ -3,13 +3,27 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "strict": false,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": [
+      "bun"
+    ]
   },
-  "include": ["src", "server.ts", "build.ts", "cli.ts", "tests"]
+  "include": [
+    "index.ts",
+    "src",
+    "server.ts",
+    "build.ts",
+    "cli.ts",
+    "tests"
+  ]
 }

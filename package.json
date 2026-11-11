@@ -1,9 +1,17 @@
 {
   "name": "@aphrody/google-design",
-  "version": "1.0.0",
-  "description": "Google Design & Material 3 Sovereign Mirror, Multi-Surface Token Compiler & Universal Verification Engine",
+  "version": "2.0.0",
+  "description": "Anti-AI-Slop Design-First Studio, M3 + Fluent 2 + Omarchy/CachyOS Token Compiler & Open Creative Asset Bank",
   "private": true,
   "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./cli": "./cli.ts",
+    "./humanizer": "./src/humanizer/anti-slop.ts",
+    "./spec": "./src/spec/prd-design-md.ts",
+    "./assets": "./src/assets/index.ts"
+  },
   "bin": {
     "gds": "./cli.ts"
   },
@@ -15,7 +23,8 @@
     "check": "bun check",
     "fmt": "bun fmt",
     "mdx": "bun run cli.ts mdx",
-    "verify": "bun run cli.ts verify"
+    "verify": "bun run cli.ts verify",
+    "assets": "bun run cli.ts assets --out dist/assets"
   },
   "dependencies": {},
   "devDependencies": {}

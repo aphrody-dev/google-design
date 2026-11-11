@@ -38,14 +38,29 @@ declare module "node:fs" {
   export function mkdirSync(path: string, options?: any): any;
   export function statSync(path: string): any;
   export function readdirSync(path: string, options?: any): any;
+  export function rmSync(path: string, options?: any): void;
 }
 
 declare module "node:path" {
   export function join(...paths: string[]): string;
   export function resolve(...paths: string[]): string;
+  export function dirname(path: string): string;
   export function basename(path: string, ext?: string): string;
   export function extname(path: string): string;
   export function relative(from: string, to: string): string;
+}
+
+declare module "node:crypto" {
+  export function createHash(algorithm: string): {
+    update(data: any): any;
+    digest(encoding: string): string;
+  };
+}
+
+declare module "node:zlib" {
+  export function deflateSync(data: any, options?: any): Uint8Array;
+  export function inflateSync(data: any): Uint8Array;
+  export function gzipSync(data: any, options?: any): Uint8Array;
 }
 
 declare module "node:util" {

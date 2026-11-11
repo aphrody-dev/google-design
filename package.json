@@ -1,5 +1,5 @@
 {
-  "name": "google-design",
+  "name": "@aphrody/google-design",
   "version": "1.0.0",
   "description": "Google Design & Material 3 Sovereign Mirror, Multi-Surface Token Compiler & Universal Verification Engine",
   "private": true,

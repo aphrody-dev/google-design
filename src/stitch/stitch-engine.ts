@@ -144,7 +144,7 @@ export function generateStitchScreen(
 <div class="stitch-scaffold" data-screen-id="${id}">
   <header class="stitch-top-bar">
     <div class="title-area">
-      <span class="symbol-slot">🔍</span>
+      <span class="symbol-slot" aria-hidden="true">[search]</span>
       <h1 class="headline-medium">${escapeHtml(title)}</h1>
     </div>
     <div class="actions">

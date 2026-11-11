@@ -12,7 +12,9 @@ export interface BrandLegalAssetFiles {
   brandBook: Record<string, any>;
 }
 
-export function generateBrandAndLegalAssets(outDir: string): BrandLegalAssetFiles {
+export function generateBrandAndLegalAssets(
+  outDir: string,
+): BrandLegalAssetFiles {
   const brandDir = join(outDir, "brand");
   const fontsDir = join(outDir, "fonts");
   const legalDir = join(outDir, "legal");
@@ -376,7 +378,8 @@ Les presentes CGU sont regies par le droit francais. Toute question relative a l
     categories: {
       brandMarks: {
         license: "CC-BY-4.0",
-        notes: "Aphrody logomarks and BIMI emblem identify official Aphrody surfaces.",
+        notes:
+          "Aphrody logomarks and BIMI emblem identify official Aphrody surfaces.",
       },
       iconsAndSprites: {
         license: "CC0-1.0",
@@ -408,7 +411,10 @@ Les presentes CGU sont regies par le droit francais. Toute question relative a l
       },
     },
   };
-  write("legal/open-source-licenses.json", JSON.stringify(licensesJson, null, 2));
+  write(
+    "legal/open-source-licenses.json",
+    JSON.stringify(licensesJson, null, 2),
+  );
 
   return { files: written, brandBook };
 }

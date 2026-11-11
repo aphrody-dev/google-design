@@ -182,7 +182,9 @@ export function lzwDecompressGifIndices(
       entry.set(prevEntry, 0);
       entry[prevEntry.length] = prevEntry[0];
     } else {
-      throw new Error(`Invalid GIF LZW code ${code} (table size ${table.length})`);
+      throw new Error(
+        `Invalid GIF LZW code ${code} (table size ${table.length})`,
+      );
     }
 
     for (let i = 0; i < entry.length; i++) {
@@ -214,7 +216,9 @@ export function encodeAnimatedGif(options: GifEncodeOptions): Uint8Array {
     throw new Error(`Invalid GIF dimensions: ${width}x${height}`);
   }
   if (palette.length === 0 || palette.length > 256) {
-    throw new Error(`GIF palette must contain 1..256 colors (got ${palette.length})`);
+    throw new Error(
+      `GIF palette must contain 1..256 colors (got ${palette.length})`,
+    );
   }
   if (frames.length === 0) {
     throw new Error("GIF requires at least 1 frame");
@@ -275,7 +279,8 @@ export function encodeAnimatedGif(options: GifEncodeOptions): Uint8Array {
 
     // Graphic Control Extension
     bytes.push(0x21, 0xf9, 0x04);
-    const gcePacked = ((disposal & 0x07) << 2) | (hasTransparency ? 0x01 : 0x00);
+    const gcePacked =
+      ((disposal & 0x07) << 2) | (hasTransparency ? 0x01 : 0x00);
     bytes.push(gcePacked);
     pushU16LE(delayCs);
     bytes.push((frame.transparentIndex ?? 0) & 0xff);
@@ -353,7 +358,8 @@ export function inspectGifBinary(gifBytes: Uint8Array): {
     const marker = gifBytes[offset++];
     if (marker === 0x3b) {
       return {
-        valid: magic === "GIF89a" && frameCount > 0 && offset === gifBytes.length,
+        valid:
+          magic === "GIF89a" && frameCount > 0 && offset === gifBytes.length,
         magic,
         width,
         height,

@@ -95,7 +95,8 @@ function inferDimensionsOrDuration(relPosix: string): string | undefined {
     if (relPosix.endsWith(".png")) return "640x360";
   }
   if (relPosix === "video/aphrody-hero-loop.svg") return "960x320";
-  if (relPosix === "video/aphrody-kinetic-banner.gif") return "160x48 (10 frames)";
+  if (relPosix === "video/aphrody-kinetic-banner.gif")
+    return "160x48 (10 frames)";
   if (relPosix === "brand/aphrody-monogram-bimi.svg") return "100x100";
   if (relPosix === "brand/aphrody-wordmark.svg") return "220x40";
   return undefined;
@@ -117,7 +118,10 @@ export function generateAssetBank(outDir: string): AssetBankGenerationResult {
   const audioVideoRes = generateAudioAndVideoAssets(outDir);
 
   const audioDurationMap = new Map(
-    audioVideoRes.audioMetadata.map((m) => [m.file, `${m.durationSec}s @ ${m.sampleRate}Hz`]),
+    audioVideoRes.audioMetadata.map((m) => [
+      m.file,
+      `${m.durationSec}s @ ${m.sampleRate}Hz`,
+    ]),
   );
 
   const allWrittenPaths = [

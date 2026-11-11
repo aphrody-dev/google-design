@@ -24,7 +24,15 @@ export interface WallpaperSpec {
   bgEnd: [number, number, number];
   accentA: [number, number, number];
   accentB: [number, number, number];
-  motif: "aurora" | "mica" | "grid" | "horizon" | "prism" | "monolith" | "silicon" | "topo";
+  motif:
+    | "aurora"
+    | "mica"
+    | "grid"
+    | "horizon"
+    | "prism"
+    | "monolith"
+    | "silicon"
+    | "topo";
 }
 
 export const WALLPAPER_SPECS: WallpaperSpec[] = [
@@ -106,7 +114,11 @@ function rgbHex([r, g, b]: [number, number, number]): string {
   return (
     "#" +
     [r, g, b]
-      .map((c) => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, "0"))
+      .map((c) =>
+        Math.max(0, Math.min(255, Math.round(c)))
+          .toString(16)
+          .padStart(2, "0"),
+      )
       .join("")
   );
 }
@@ -133,13 +145,21 @@ export function renderWallpaper4kSvg(spec: WallpaperSpec): string {
     case "grid": {
       const lines: string[] = [];
       for (let x = 240; x < 3840; x += 240) {
-        lines.push(`<line x1="${x}" y1="0" x2="${x}" y2="2160" stroke="${a0}" stroke-opacity="0.09" stroke-width="2"/>`);
+        lines.push(
+          `<line x1="${x}" y1="0" x2="${x}" y2="2160" stroke="${a0}" stroke-opacity="0.09" stroke-width="2"/>`,
+        );
       }
       for (let y = 240; y < 2160; y += 240) {
-        lines.push(`<line x1="0" y1="${y}" x2="3840" y2="${y}" stroke="${a1}" stroke-opacity="0.09" stroke-width="2"/>`);
+        lines.push(
+          `<line x1="0" y1="${y}" x2="3840" y2="${y}" stroke="${a1}" stroke-opacity="0.09" stroke-width="2"/>`,
+        );
       }
-      lines.push(`<circle cx="1920" cy="1080" r="480" fill="none" stroke="${a0}" stroke-opacity="0.32" stroke-width="4"/>`);
-      lines.push(`<circle cx="1920" cy="1080" r="240" fill="none" stroke="${a1}" stroke-opacity="0.45" stroke-width="3"/>`);
+      lines.push(
+        `<circle cx="1920" cy="1080" r="480" fill="none" stroke="${a0}" stroke-opacity="0.32" stroke-width="4"/>`,
+      );
+      lines.push(
+        `<circle cx="1920" cy="1080" r="240" fill="none" stroke="${a1}" stroke-opacity="0.45" stroke-width="3"/>`,
+      );
       geometry = lines.join("\n  ");
       break;
     }
@@ -219,7 +239,7 @@ export function renderWallpaperRasterPng(
     const ny = y / (height - 1);
     for (let x = 0; x < width; x++) {
       const nx = x / (width - 1);
-      const t = (nx * 0.55 + ny * 0.45);
+      const t = nx * 0.55 + ny * 0.45;
 
       let r = r0 + (r1 - r0) * t;
       let g = g0 + (g1 - g0) * t;

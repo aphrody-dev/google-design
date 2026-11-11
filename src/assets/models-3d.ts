@@ -48,8 +48,16 @@ function computeMinMaxVec3(arr: Float32Array): {
   }
 
   return {
-    min: [Number(minX.toFixed(6)), Number(minY.toFixed(6)), Number(minZ.toFixed(6))],
-    max: [Number(maxX.toFixed(6)), Number(maxY.toFixed(6)), Number(maxZ.toFixed(6))],
+    min: [
+      Number(minX.toFixed(6)),
+      Number(minY.toFixed(6)),
+      Number(minZ.toFixed(6)),
+    ],
+    max: [
+      Number(maxX.toFixed(6)),
+      Number(maxY.toFixed(6)),
+      Number(maxZ.toFixed(6)),
+    ],
   };
 }
 

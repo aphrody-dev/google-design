@@ -16,10 +16,7 @@ import {
   buildMaterialIconsFigmaManifest,
   fetchFigmaCurrentUser,
 } from "./src/figma/figma-connect.ts";
-import {
-  auditPathAntiSlop,
-  humanizeText,
-} from "./src/humanizer/anti-slop.ts";
+import { auditPathAntiSlop, humanizeText } from "./src/humanizer/anti-slop.ts";
 import {
   synthesizePrdAndDesignMd,
   type SurfaceMode,
@@ -149,7 +146,9 @@ async function main() {
         args[1] && !args[1].startsWith("--")
           ? args[1]
           : "Aphrody Generalist Surface";
-      const outDir = resolve(getFlagValue("--out") || join(process.cwd(), "spec"));
+      const outDir = resolve(
+        getFlagValue("--out") || join(process.cwd(), "spec"),
+      );
       const seedColor = getFlagValue("--seed") || "#1A73E8";
       const mode = (getFlagValue("--mode") as SurfaceMode) || "operate";
 
@@ -160,7 +159,9 @@ async function main() {
         outDir,
       });
 
-      console.log(`Generated Design-First Plan for '${bundle.name}' (${bundle.mode})`);
+      console.log(
+        `Generated Design-First Plan for '${bundle.name}' (${bundle.mode})`,
+      );
       for (const f of bundle.writtenFiles) {
         console.log(`  + ${f}`);
       }
@@ -177,12 +178,24 @@ async function main() {
       console.log(`Manifest:       ${res.manifestPath}`);
       console.log(`Total Files:    ${res.totalFiles}`);
       console.log(`Total Size:     ${(res.totalBytes / 1024).toFixed(1)} KB`);
-      console.log(`Themes:         ${res.counts.themes} (23 Omarchy + CachyOS + M3 + Fluent 2)`);
-      console.log(`SVG Icons:      ${res.counts.icons} (+ symbol sprite & atlas)`);
-      console.log(`Open Pets:      ${res.counts.openPets} (GIF89a + SVG/PNG sheets + CSS/JSON)`);
-      console.log(`Wallpapers:     ${res.counts.wallpapers} (4K SVG + compressed PNG)`);
-      console.log(`3D Models:      ${res.counts.models3d} (.glb + .gltf + .obj)`);
-      console.log(`Audio Clips:    ${res.counts.audioClips} (16-bit 44.1kHz PCM .wav + motion scenes)`);
+      console.log(
+        `Themes:         ${res.counts.themes} (23 Omarchy + CachyOS + M3 + Fluent 2)`,
+      );
+      console.log(
+        `SVG Icons:      ${res.counts.icons} (+ symbol sprite & atlas)`,
+      );
+      console.log(
+        `Open Pets:      ${res.counts.openPets} (GIF89a + SVG/PNG sheets + CSS/JSON)`,
+      );
+      console.log(
+        `Wallpapers:     ${res.counts.wallpapers} (4K SVG + compressed PNG)`,
+      );
+      console.log(
+        `3D Models:      ${res.counts.models3d} (.glb + .gltf + .obj)`,
+      );
+      console.log(
+        `Audio Clips:    ${res.counts.audioClips} (16-bit 44.1kHz PCM .wav + motion scenes)`,
+      );
       console.log("--------------------------------------------------");
       break;
     }

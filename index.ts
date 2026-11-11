@@ -14,3 +14,4 @@ export * from "./src/canvas/canvas-engine.ts";
 export * from "./src/figma/figma-connect.ts";
 export * from "./src/mdx/bun-docs-generator.ts";
 export * from "./src/assets/index.ts";
+export * from "./src/pets/index.ts";

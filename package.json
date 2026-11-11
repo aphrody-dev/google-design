@@ -10,7 +10,9 @@
     "./cli": "./cli.ts",
     "./humanizer": "./src/humanizer/anti-slop.ts",
     "./spec": "./src/spec/prd-design-md.ts",
-    "./assets": "./src/assets/index.ts"
+    "./assets": "./src/assets/index.ts",
+    "./pets": "./src/pets/index.ts",
+    "./symbols": "./src/symbols/catalog.ts"
   },
   "bin": {
     "gds": "./cli.ts"

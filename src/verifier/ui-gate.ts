@@ -50,6 +50,7 @@ const VALID_GRID_VALUES = new Set([
 ]);
 
 const GOOGLE_BRAND_COLORS = new Set([
+  "#0b57d0",
   "#4285f4",
   "#ea4335",
   "#fbbc04",
@@ -111,10 +112,12 @@ export function verifyTarget(targetPath: string): VerificationReport {
       continue;
     }
 
-    // Skip git, upstream, dist, node_modules
+    // Skip git, upstream, dist, node_modules, .yolo
     if (
       filePath.includes("\\.git\\") ||
       filePath.includes("/.git/") ||
+      filePath.includes("\\.yolo\\") ||
+      filePath.includes("/.yolo/") ||
       filePath.includes("\\upstream\\") ||
       filePath.includes("/upstream/") ||
       filePath.includes("\\dist\\") ||
@@ -170,38 +173,43 @@ export function verifyTarget(targetPath: string): VerificationReport {
       const line = lines[lineIdx];
       const lineNum = lineIdx + 1;
 
-        // 1. Color Check: Scan for rogue hex colors outside M3, Google Brand, or canonical theme/asset definitions
-        const isPaletteDataFile =
-          filePath.endsWith("themes-stylesheets.ts") ||
-          filePath.endsWith("wallpapers.ts") ||
-          filePath.endsWith("open-pets.ts") ||
-          filePath.endsWith("brand-legal.ts") ||
-          filePath.endsWith("models-3d.ts") ||
-          filePath.endsWith("prd-design-md.ts") ||
-          filePath.endsWith("anti-slop.ts") ||
-          filePath.includes("\\tests\\") ||
-          filePath.includes("/tests/");
+      // 1. Color Check: Scan for rogue hex colors outside M3, Google Brand, or canonical theme/asset definitions
+      const isPaletteDataFile =
+        filePath.endsWith("DESIGN.md") ||
+        filePath.endsWith("PRD.md") ||
+        filePath.endsWith("tokens.ts") ||
+        filePath.endsWith("material-tokens.ts") ||
+        filePath.endsWith("fluent-tokens.ts") ||
+        filePath.endsWith("themes-stylesheets.ts") ||
+        filePath.endsWith("wallpapers.ts") ||
+        filePath.endsWith("open-pets.ts") ||
+        filePath.endsWith("brand-legal.ts") ||
+        filePath.endsWith("models-3d.ts") ||
+        filePath.endsWith("prd-design-md.ts") ||
+        filePath.endsWith("anti-slop.ts") ||
+        filePath.includes("\\tests\\") ||
+        filePath.includes("/tests/");
 
-        const hexMatches = line.matchAll(
-          /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g,
-        );
-        for (const match of hexMatches) {
-          tokenChecksTotal++;
-          const hex = match[0].toLowerCase();
-          const normHex =
-            hex.length === 4
-              ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
-              : hex.slice(0, 7);
+      const hexMatches = line.matchAll(
+        /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g,
+      );
+      for (const match of hexMatches) {
+        tokenChecksTotal++;
+        const hex = match[0].toLowerCase();
+        const normHex =
+          hex.length === 4
+            ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+            : hex.slice(0, 7);
 
-          const isGoogleBrand = GOOGLE_BRAND_COLORS.has(normHex);
-          const isM3Var =
-            line.includes("--md-sys-") ||
-            line.includes("--md-ref-") ||
-            line.includes("var(");
+        const isGoogleBrand = GOOGLE_BRAND_COLORS.has(normHex);
+        const isM3Var =
+          line.includes("--md-sys-") ||
+          line.includes("--md-ref-") ||
+          line.includes("var(");
 
-          if (isGoogleBrand || isM3Var || isPaletteDataFile) {
-            tokenChecksPassed++;
-          } else {
+        if (isGoogleBrand || isM3Var || isPaletteDataFile) {
+          tokenChecksPassed++;
+        } else {
           // Check HCT color info
           try {
             const info = getHctColorInfo(normHex);

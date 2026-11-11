@@ -240,10 +240,7 @@ function build8LogicalFrames(base16: Uint8Array): Uint8Array[] {
   return frames;
 }
 
-function upscaleIndexedFrame(
-  src16: Uint8Array,
-  scale: number,
-): Uint8Array {
+function upscaleIndexedFrame(src16: Uint8Array, scale: number): Uint8Array {
   const size = 16 * scale;
   const dst = new Uint8Array(size * size);
   for (let y = 0; y < size; y++) {
@@ -268,10 +265,7 @@ function renderSpriteSheetSvg(
   const hexOf = (idx: number) => {
     const c = pet.palette[idx];
     return (
-      "#" +
-      [c.r, c.g, c.b]
-        .map((v) => v.toString(16).padStart(2, "0"))
-        .join("")
+      "#" + [c.r, c.g, c.b].map((v) => v.toString(16).padStart(2, "0")).join("")
     );
   };
 

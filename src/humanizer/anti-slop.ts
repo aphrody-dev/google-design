@@ -81,7 +81,8 @@ const LEXICON_RULES: LexiconRule[] = [
     pattern:
       /\b(I hope this helps!?|Great question!?|You're absolutely right!?|Certainly!|Of course!|Let me know if you(?:'d| would) like me to)\b/gi,
     replacement: "",
-    message: "Chatbot wrapper residue detected; remove conversational scaffolding.",
+    message:
+      "Chatbot wrapper residue detected; remove conversational scaffolding.",
   },
   {
     id: "humanizer-staged-opener",
@@ -90,7 +91,8 @@ const LEXICON_RULES: LexiconRule[] = [
     pattern:
       /\b(Let's dive in(?:to)?|Without further ado|Here's what you need to know|In today's fast-paced (?:world|landscape|digital age|era))\b[:,.!]?\s*/gi,
     replacement: "",
-    message: "Staged AI run-up opener detected; state the concrete point directly.",
+    message:
+      "Staged AI run-up opener detected; state the concrete point directly.",
   },
   {
     id: "humanizer-delve",
@@ -98,7 +100,8 @@ const LEXICON_RULES: LexiconRule[] = [
     severity: "warning",
     pattern: /\bdelve(?:s|d)?\s+into\b/gi,
     replacement: "examine",
-    message: "Stock AI verb 'delve into' detected; use 'examine' or state the subject.",
+    message:
+      "Stock AI verb 'delve into' detected; use 'examine' or state the subject.",
   },
   {
     id: "humanizer-delve-bare",
@@ -112,9 +115,11 @@ const LEXICON_RULES: LexiconRule[] = [
     id: "humanizer-testament",
     category: "inflated-significance",
     severity: "warning",
-    pattern: /\b(?:stands|serves)\s+as\s+a\s+(?:enduring\s+)?testament\s+to\b/gi,
+    pattern:
+      /\b(?:stands|serves)\s+as\s+a\s+(?:enduring\s+)?testament\s+to\b/gi,
     replacement: "demonstrates",
-    message: "Inflated significance phrase 'stands as a testament to' detected.",
+    message:
+      "Inflated significance phrase 'stands as a testament to' detected.",
   },
   {
     id: "humanizer-testament-short",
@@ -144,9 +149,11 @@ const LEXICON_RULES: LexiconRule[] = [
     id: "humanizer-unleash",
     category: "ai-lexicon",
     severity: "warning",
-    pattern: /\bunleash(?:es|ed|ing)?(?:\s+the\s+(?:full\s+)?(?:power|potential)\s+of)?\b/gi,
+    pattern:
+      /\bunleash(?:es|ed|ing)?(?:\s+the\s+(?:full\s+)?(?:power|potential)\s+of)?\b/gi,
     replacement: "enable",
-    message: "Promotional AI verb 'unleash' detected; describe the exact capability.",
+    message:
+      "Promotional AI verb 'unleash' detected; describe the exact capability.",
   },
   {
     id: "humanizer-seamless",
@@ -154,7 +161,8 @@ const LEXICON_RULES: LexiconRule[] = [
     severity: "warning",
     pattern: /\bseamlessly\b/gi,
     replacement: "directly",
-    message: "Overused AI adverb 'seamlessly' detected; specify how integration works.",
+    message:
+      "Overused AI adverb 'seamlessly' detected; specify how integration works.",
   },
   {
     id: "humanizer-seamless-adj",
@@ -162,7 +170,8 @@ const LEXICON_RULES: LexiconRule[] = [
     severity: "warning",
     pattern: /\bseamless\b/gi,
     replacement: "direct",
-    message: "Overused AI adjective 'seamless' detected; specify the concrete behavior.",
+    message:
+      "Overused AI adjective 'seamless' detected; specify the concrete behavior.",
   },
   {
     id: "humanizer-game-changer",
@@ -194,13 +203,15 @@ const LEXICON_RULES: LexiconRule[] = [
     severity: "error",
     pattern: /\bcutting[- ]edge\s+AI[- ]powered\b/gi,
     replacement: "automated",
-    message: "Public AI-hype phrase 'cutting-edge AI-powered' violates generalist anti-slop rules.",
+    message:
+      "Public AI-hype phrase 'cutting-edge AI-powered' violates generalist anti-slop rules.",
   },
   {
     id: "humanizer-ai-powered-hype",
     category: "ai-lexicon",
     severity: "warning",
-    pattern: /\b(?:supercharge|next[- ]gen(?:eration)?\s+AI|unlock\s+the\s+power\s+of)\b/gi,
+    pattern:
+      /\b(?:supercharge|next[- ]gen(?:eration)?\s+AI|unlock\s+the\s+power\s+of)\b/gi,
     replacement: "accelerate",
     message: "Promotional AI-hype puffery detected.",
   },
@@ -224,15 +235,15 @@ const LEXICON_RULES: LexiconRule[] = [
     id: "humanizer-let-that-sink-in",
     category: "staged-opener",
     severity: "warning",
-    pattern: /\b(?:Let that sink in\.|Read that again\.|That is the real win\.)/gi,
+    pattern:
+      /\b(?:Let that sink in\.|Read that again\.|That is the real win\.)/gi,
     replacement: "",
     message: "Dramatic one-line closer detected.",
   },
 ];
 
 // Matches Extended Pictographic & Surrogate-Pair Emojis while sparing standard ASCII/Box-Drawing/Math symbols
-const EMOJI_REGEX =
-  /(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
+const EMOJI_REGEX = /(?:\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
 
 // Puffery adjective triads such as "fast, scalable, and revolutionary platform" or "sleek, intuitive, seamless"
 const PUFFERY_WORDS =
@@ -311,8 +322,7 @@ function humanizeProseSegment(segment: string): string {
   // Rewrite Not-only-X-but-also-Y staging into direct coordination
   working = working.replace(
     /\b[Ii]t(?:'s| is) not (?:just|merely|only) about ([^,;:.]+)[,;]\s*it(?:'s| is) about ([^.]+)\./g,
-    (_, a: string, b: string) =>
-      `It covers ${a.trim()} and ${b.trim()}.`,
+    (_, a: string, b: string) => `It covers ${a.trim()} and ${b.trim()}.`,
   );
 
   // Replace spaced em dashes in prose with commas
@@ -563,7 +573,14 @@ export function auditPathAntiSlop(targetPath: string): DirectorySlopReport {
 
   for (const file of allFiles) {
     const ext = extname(file).toLowerCase();
-    const isStyleCapable = [".html", ".css", ".tsx", ".jsx", ".vue", ".svelte"].includes(ext);
+    const isStyleCapable = [
+      ".html",
+      ".css",
+      ".tsx",
+      ".jsx",
+      ".vue",
+      ".svelte",
+    ].includes(ext);
     const content = readFileSync(file, "utf8");
     const res = auditAntiSlop(content, {
       filePath: file,
@@ -612,11 +629,13 @@ function collectAuditableFiles(target: string): string[] {
   ]);
   const skipDirs = new Set([
     ".git",
+    ".yolo",
     "node_modules",
     "upstream",
     "dist",
     "var",
     "third_party",
+    "graphify-out",
   ]);
 
   const out: string[] = [];

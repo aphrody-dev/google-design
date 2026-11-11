@@ -148,7 +148,7 @@ export function inspectWavBinary(wavBytes: Uint8Array): {
 }
 
 function triangleWave(phaseRad: number): number {
-  const norm = ((phaseRad / (Math.PI * 2)) % 1 + 1) % 1;
+  const norm = (((phaseRad / (Math.PI * 2)) % 1) + 1) % 1;
   return norm < 0.5 ? 4 * norm - 1 : 3 - 4 * norm;
 }
 
@@ -158,7 +158,8 @@ const SOUND_SPECS: WavSynthSpec[] = [
     title: "UI Micro Tap",
     durationSec: 0.05,
     renderSample: (t, d) => {
-      const env = Math.sin((Math.PI * Math.min(t, 0.004)) / 0.008) * Math.exp(-t * 85);
+      const env =
+        Math.sin((Math.PI * Math.min(t, 0.004)) / 0.008) * Math.exp(-t * 85);
       const freq = 920 - (t / d) * 340;
       return 0.55 * env * Math.sin(2 * Math.PI * freq * t);
     },
@@ -188,7 +189,8 @@ const SOUND_SPECS: WavSynthSpec[] = [
       const attack = Math.min(1, t / 0.012);
       const decay = Math.exp(-t * 8.5) * (1 - t / d);
       const noteA = Math.sin(2 * Math.PI * 523.25 * t); // C5
-      const noteB = t > 0.055 ? Math.sin(2 * Math.PI * 783.99 * (t - 0.055)) : 0; // G5
+      const noteB =
+        t > 0.055 ? Math.sin(2 * Math.PI * 783.99 * (t - 0.055)) : 0; // G5
       return 0.45 * attack * decay * (0.55 * noteA + 0.45 * noteB);
     },
   },
@@ -495,7 +497,11 @@ export function generateAudioAndVideoAssets(outDir: string): {
   }
 
   const audioCatalogPath = join(audioDir, "audio-catalog.json");
-  writeFileSync(audioCatalogPath, JSON.stringify(audioMetadata, null, 2), "utf8");
+  writeFileSync(
+    audioCatalogPath,
+    JSON.stringify(audioMetadata, null, 2),
+    "utf8",
+  );
   written.push(audioCatalogPath);
 
   // Video & Motion scenes
